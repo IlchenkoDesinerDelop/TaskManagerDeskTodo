@@ -1,10 +1,5 @@
 import React from 'react';
 
-interface Subtask {
-  title: string;
-  description?: string;
-}
-
 interface SubtaskDetailsProps {
   selectedSubtask: Subtask | null;
 }
@@ -17,7 +12,7 @@ const SubtaskDetails: React.FC<SubtaskDetailsProps> = ({ selectedSubtask }) => {
           <h2 className="text-4xl font-bold text-blue-600">{selectedSubtask.title}</h2>
           <p>{selectedSubtask.description}</p>
         </div>
-    ) : (
+      ) : (
         <p className="text-gray-600">Выберите подзадачу для просмотра информации.</p>
       )}
     </div>
