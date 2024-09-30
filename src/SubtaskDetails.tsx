@@ -1,4 +1,10 @@
+
 import React from 'react';
+
+interface Subtask {
+  title: string;
+  description?: string;
+}
 
 interface SubtaskDetailsProps {
   selectedSubtask: Subtask | null;
