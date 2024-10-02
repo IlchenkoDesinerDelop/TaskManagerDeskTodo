@@ -1,70 +1,54 @@
-# Getting Started with Create React App
+Это приложение для управления задачами, созданное с использованием TypeScript, React и Tailwind CSS. 
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Основные функциональные возможности:
 
-## Available Scripts
+Отображение задач в виде дерева:  Задачи организованы в иерархическую структуру, где подзадачи вложены под родительские задачи.
+Детализированный просмотр задач: При клике на задачу справа отображается ее полный текст.
+Создание подзадач:  Можно создавать подзадачи для любой задачи, включая подзадачи. Вложенность подзадач неограничена.
+Сворачивание/разворачивание списка подзадач:  Список подзадач можно скрыть или развернуть для удобства просмотра.
+Чекбоксы для выделения задач:  Чекбокс слева от каждой задачи позволяет выбрать задачу и все ее подзадачи. Выделение подзадач также выделяет родительскую задачу.
+Удаление задач:  Задачи могут быть удалены из списка.
+Редактирование задач:  Заголовок и текст задачи можно редактировать.
+Хранение данных в localStorage:  Данные задач сохраняются в localStorage браузера, что позволяет восстановить их при следующем запуске приложения.
 
-In the project directory, you can run:
+Технологии:
 
-### `npm start`
+TypeScript:  Обеспечивает статическую типизацию для повышения качества кода и предотвращения ошибок.
+React:  Библиотека JavaScript для создания пользовательских интерфейсов.
+Tailwind CSS:  Рамочная среда CSS для быстрой и простой стилизации компонентов.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Структура проекта:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+src/:  Содержит основной код приложения.
+src/modal__manipulate/:  Компоненты приложения, такие как список задач, детали задачи, форма для создания/редактирования задач.
 
-### `npm test`
+Установка и запуск:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. Клонируйте репозиторий: git clone(https://github.com/IlchenkoDesinerDelop/TaskManagerDeskTodo.git)]
+2. Установите зависимости: npm install
+3. Запустите приложение: npm start
 
-### `npm run build`
+Дополнительные сведения:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+package.json:  Содержит метаданные проекта, скрипты npm, зависимости.
+tsconfig.json:  Настройки компилятора TypeScript.
+tailwind.config.js:  Настройки Tailwind CSS.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+app.tsx:основной компонент.
+taskList:компонент хранящий в себе список задач и подзадач выборка производится из localstorage из левой части элемента
+SubtaskDetails.tsx: компонент хранящий в себе список задач и подзадач что уже выбраны отвечает за правую сторону элемента 
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+компоненты управления модальными окнами
+AddSubtaskModal.tsx:компонент на добавление задач.
+AddtaskModal.tsx:компонент на добавление подзадач
+EditSubtaskModal.tsx: компонент на редактирования подзадач
+EdittaskModal.tsx: компонент на редактирования дзадач
 
-### `npm run eject`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+возможно будущие улучшения:
+Добавление возможности сортировки задач:  Добавить возможность сортировки задач по различным критериям (например, по сроку выполнения, по приоритету).
+Добавление возможности фильтрации задач:  Добавить возможность фильтрации задач по ключевым словам или по другим параметрам.
+Добавление возможности drag-and-drop:  Добавить возможность перетаскивания задач для изменения их порядка.
+Интеграция с внешними сервисами:  Интегрировать приложение с внешними сервисами, такими как Google Calendar или Trello.
+возможность создать свою тему 
+возможность сделать задачи через mobx на текущий переуд в силу малого опыта я этого не реализовал 
