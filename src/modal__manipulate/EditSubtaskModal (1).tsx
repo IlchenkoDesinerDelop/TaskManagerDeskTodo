@@ -1,32 +1,45 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 
 interface Subtask {
-  id: string;
   title: string;
   description?: string;
-  subtasks: Subtask[];
 }
 
-interface AddSubtaskModalProps {
+interface EditSubtaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddSubtask: (newSubtask: Subtask) => void;
+  subtask: Subtask | null;
+  onEditSubtask: (updatedSubtask: Subtask) => void;
 }
 
-const AddSubtaskModal: React.FC<AddSubtaskModalProps> = ({ isOpen, onClose, onAddSubtask }) => {
+const EditSubtaskModal: React.FC<EditSubtaskModalProps> = ({ isOpen, onClose, subtask, onEditSubtask }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
 
+  useEffect(() => {
+    if (subtask) {
+      setTitle(subtask.title);
+      setDescription(subtask.description || '');
+    }
+  }, [subtask]);
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    onAddSubtask({ id: Date.now().toString(), title, description, subtasks: [] });
-    onClose();
+    if (subtask) {
+      onEditSubtask({
+        ...subtask,
+        title,
+        description,
+      });
+      onClose();
+    }
   };
 
   return (
     <div className={`fixed inset-0 flex items-center justify-center z-50 ${isOpen ? 'block' : 'hidden'}`}>
       <div className="bg-white rounded-md shadow-md p-6 w-1/3">
-        <h2 className="text-2xl font-bold text-blue-600 mb-4">+ Добавить подзадачу</h2>
+        <h2 className="text-2xl font-bold text-blue-600 mb-4">Редактировать подзадачу</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">Название:</label>
@@ -51,7 +64,7 @@ const AddSubtaskModal: React.FC<AddSubtaskModalProps> = ({ isOpen, onClose, onAd
             type="submit"
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           >
-            Добавить
+            Сохранить
           </button>
           <button
             type="button"
@@ -66,4 +79,4 @@ const AddSubtaskModal: React.FC<AddSubtaskModalProps> = ({ isOpen, onClose, onAd
   );
 };
 
-export default AddSubtaskModal;
+export default EditSubtaskModal;

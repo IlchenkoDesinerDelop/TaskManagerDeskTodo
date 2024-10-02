@@ -6,13 +6,15 @@ import EditTaskModal from './modal__manipulate/EditTaskModal.tsx';
 import EditSubtaskModal from './modal__manipulate/EditSubtaskModal.tsx';
 import SubtaskDetails from './SubtaskDetails.tsx';
 import './index.css';
-
 interface Subtask {
+  id: string;
   title: string;
   description?: string;
+  subtasks: Subtask[];
 }
 
 interface Task {
+  id: string;
   title: string;
   description: string;
   subtasks: Subtask[];
@@ -20,120 +22,149 @@ interface Task {
 
 const App: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [completedSubtasks, setCompletedSubtasks] = useState<Record<number, boolean[]>>({});
-  const [expandedTasks, setExpandedTasks] = useState<boolean[]>([]);
-  const [selectedTaskIndex, setSelectedTaskIndex] = useState<number | null>(null);
-  const [selectedSubtask, setSelectedSubtask] = useState<Subtask | null>(null);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isAddSubtaskModalOpen, setIsAddSubtaskModalOpen] = useState(false);
   const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState(false);
   const [isEditSubtaskModalOpen, setIsEditSubtaskModalOpen] = useState(false);
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number | null>(null);
-  const [currentSubtaskIndex, setCurrentSubtaskIndex] = useState<number | null>(null);
+  const [currentSubtaskIndexes, setCurrentSubtaskIndexes] = useState<number[]>([]);
+  const [expandedTasks, setExpandedTasks] = useState<boolean[]>([]);
+  const [completedSubtasks, setCompletedSubtasks] = useState<Record<number, boolean[]>>({});
+  const [selectedTaskIndex, setSelectedTaskIndex] = useState<number | null>(null);
 
   useEffect(() => {
     loadFromLocalStorage();
-  }, []);
+   }, []);
 
-  const initializeTestData = () => {
-    const testTasks: Task[] = [
-      {
-        title: "Задача 1: Завершить проект",
-        description: "Описание задачи 1: Необходимо завершить проект до конца месяца.",
-        subtasks: [
-          { title: "Подзадача 1.1: Написать код", description: "Написать код для основной функции." },
-          { title: "Подзадача 1.2: Провести тестирование", description: "Провести тестирование написанного кода." },
-          { title: "Подзадача 1.3: Подготовить документацию", description: "Подготовить документацию для проекта." }
-        ]
-      },
-      // Другие задачи...
-    ];
+   useEffect(() => {
+    saveToLocalStorage();
+   }, [tasks, expandedTasks, completedSubtasks]);
 
-    setTasks(testTasks);
-    setCompletedSubtasks(testTasks.reduce((acc, task, index) => {
-      acc[index] = Array(task.subtasks.length).fill(false);
-      return acc;
-    }, {}));
-    setExpandedTasks(Array(testTasks.length).fill(false));
-    saveToLocalStorage(testTasks);
+  const saveToLocalStorage = () => {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    localStorage.setItem('expandedTasks', JSON.stringify(expandedTasks));
+    localStorage.setItem('completedSubtasks', JSON.stringify(completedSubtasks));
   };
 
   const loadFromLocalStorage = () => {
     const savedTasks = localStorage.getItem('tasks');
+    const savedExpandedTasks = localStorage.getItem('expandedTasks');
+    const savedCompletedSubtasks = localStorage.getItem('completedSubtasks');
+
     if (savedTasks) {
-      const parsedTasks = JSON.parse(savedTasks);
-      setTasks(parsedTasks);
-      setExpandedTasks(Array(parsedTasks.length).fill(false));
-      setCompletedSubtasks(parsedTasks.reduce((acc: Record<number, boolean[]>, task: Task, index: number) => {
-        acc[index] = Array(task.subtasks.length).fill(false);
-        return acc;
-      }, {}));
-    } else {
-      initializeTestData();
+      setTasks(JSON.parse(savedTasks));
+    }
+    if (savedExpandedTasks) {
+      setExpandedTasks(JSON.parse(savedExpandedTasks));
+    }
+    if (savedCompletedSubtasks) {
+      setCompletedSubtasks(JSON.parse(savedCompletedSubtasks));
     }
   };
 
-  const saveToLocalStorage = (tasksToSave: Task[]) => {
-    localStorage.setItem('tasks', JSON.stringify(tasksToSave));
+  const handleAddTask = (newTask: Task) => {
+    setTasks([...tasks, newTask]);
+    setExpandedTasks([...expandedTasks, false]);
+    setCompletedSubtasks({
+      ...completedSubtasks,
+      [tasks.length]: Array(newTask.subtasks.length).fill(false)
+    });
   };
 
-  const toggleSubtask = (taskIndex: number, subtaskIndex: number) => {
-    const newCompletedSubtasks = { ...completedSubtasks };
-    newCompletedSubtasks[taskIndex][subtaskIndex] = !newCompletedSubtasks[taskIndex][subtaskIndex];
-    setCompletedSubtasks(newCompletedSubtasks);
-    saveToLocalStorage(tasks);
+  const handleAddSubtask = (newSubtask: Subtask) => {
+    if (currentTaskIndex !== null) {
+      const tasksCopy = [...tasks];
+      let subtaskPointer = tasksCopy[currentTaskIndex];
+      for (const index of currentSubtaskIndexes) {
+        subtaskPointer = subtaskPointer.subtasks[index];
+      }
+      subtaskPointer.subtasks.push(newSubtask);
+      setTasks(tasksCopy);
+      saveToLocalStorage(); // Сохранение данных в localStorage после добавления подзадачи
+    }
+  };
+
+  const handleEditTask = (updatedTask: Task) => {
+    if (currentTaskIndex !== null) {
+      const tasksCopy = [...tasks];
+      tasksCopy[currentTaskIndex] = updatedTask;
+      setTasks(tasksCopy);
+    }
+  };
+
+  const handleEditSubtask = (updatedSubtask: Subtask) => {
+    if (currentTaskIndex !== null) {
+      const tasksCopy = [...tasks];
+      let subtaskPointer = tasksCopy[currentTaskIndex];
+      for (const index of currentSubtaskIndexes.slice(0, -1)) {
+        subtaskPointer = subtaskPointer.subtasks[index];
+      }
+      subtaskPointer.subtasks[currentSubtaskIndexes[currentSubtaskIndexes.length - 1]] = updatedSubtask;
+      setTasks(tasksCopy);
+    }
   };
 
   const toggleTask = (taskIndex: number) => {
     const newExpandedTasks = [...expandedTasks];
     newExpandedTasks[taskIndex] = !newExpandedTasks[taskIndex];
     setExpandedTasks(newExpandedTasks);
-    saveToLocalStorage(tasks);
   };
 
-  const handleTaskEdit = (taskIndex: number, updatedTask: Task) => {
-    const updatedTasks = [...tasks];
-    updatedTasks[taskIndex] = updatedTask;
-    setTasks(updatedTasks);
-    saveToLocalStorage(updatedTasks);
+  const toggleSubtask = (taskIndex: number, subtaskIndex: number) => {
+    const newCompletedSubtasks = { ...completedSubtasks };
+    newCompletedSubtasks[taskIndex][subtaskIndex] = !newCompletedSubtasks[taskIndex][subtaskIndex];
+    setCompletedSubtasks(newCompletedSubtasks);
   };
 
-  const handleTaskDelete = (taskIndex: number) => {
-    const updatedTasks = tasks.filter((_, i) => i !== taskIndex);
-    setTasks(updatedTasks);
-    setExpandedTasks(expandedTasks.filter((_, i) => i !== taskIndex));
+  const selectTask = (taskIndex: number) => {
+    setSelectedTaskIndex(taskIndex);
+  };
+
+  const openAddSubtaskModal = (taskIndex: number, subtaskIndexes: number[] = []) => {
+    setCurrentTaskIndex(taskIndex);
+    setCurrentSubtaskIndexes(subtaskIndexes);
+    setIsAddSubtaskModalOpen(true);
+  };
+
+  const openEditTaskModal = (taskIndex: number) => {
+    setCurrentTaskIndex(taskIndex);
+    setIsEditTaskModalOpen(true);
+  };
+
+  const openEditSubtaskModal = (taskIndex: number, subtaskIndexes: number[]) => {
+    setCurrentTaskIndex(taskIndex);
+    setCurrentSubtaskIndexes(subtaskIndexes);
+    setIsEditSubtaskModalOpen(true);
+  };
+
+  const deleteTask = (taskIndex: number) => {
+    const tasksCopy = [...tasks];
+    tasksCopy.splice(taskIndex, 1);
+    setTasks(tasksCopy);
+
+    const newExpandedTasks = [...expandedTasks];
+    newExpandedTasks.splice(taskIndex, 1);
+    setExpandedTasks(newExpandedTasks);
+
     const newCompletedSubtasks = { ...completedSubtasks };
     delete newCompletedSubtasks[taskIndex];
     setCompletedSubtasks(newCompletedSubtasks);
-    saveToLocalStorage(updatedTasks);
   };
 
-  const handleSubtaskEdit = (taskIndex: number, subtaskIndex: number, updatedSubtask: Subtask) => {
-    const updatedTasks = [...tasks];
-    updatedTasks[taskIndex].subtasks[subtaskIndex] = updatedSubtask;
-    setTasks(updatedTasks);
-    saveToLocalStorage(updatedTasks);
-  };
-
-  const handleSubtaskDelete = (taskIndex: number, subtaskIndex: number) => {
-    const updatedTasks = [...tasks];
-    updatedTasks[taskIndex].subtasks.splice(subtaskIndex, 1);
-    setTasks(updatedTasks);
-    setCompletedSubtasks({
-      ...completedSubtasks,
-      [taskIndex]: completedSubtasks[taskIndex].filter((_, i) => i !== subtaskIndex)
-    });
-    saveToLocalStorage(updatedTasks);
-  };
-
-  const handleSubtaskSelect = (taskIndex: number, subtaskIndex: number) => {
-    const subtask = tasks[taskIndex].subtasks[subtaskIndex];
-    setSelectedSubtask(subtask);
+  const deleteSubtask = (taskIndex: number, subtaskIndexes: number[]) => {
+    const tasksCopy = [...tasks];
+    let subtaskPointer = tasksCopy[taskIndex];
+    for (const index of subtaskIndexes.slice(0, -1)) {
+      subtaskPointer = subtaskPointer.subtasks[index];
+    }
+    subtaskPointer.subtasks.splice(subtaskIndexes[subtaskIndexes.length - 1], 1);
+    setTasks(tasksCopy);
+    saveToLocalStorage(); // Сохранение данных в localStorage после удаления подзадачи
   };
 
   return (
     <div className="flex h-screen bg-gray-200">
-      <div className="flex-1 flex flex-col p-4">
+      <div className="w-1/2 p-4">
         <button
           className="mb-4 p-2 bg-blue-500 text-white rounded"
           onClick={() => setIsAddTaskModalOpen(true)}
@@ -147,112 +178,59 @@ const App: React.FC = () => {
           toggleTask={toggleTask}
           toggleSubtask={toggleSubtask}
           selectedTaskIndex={selectedTaskIndex}
-          selectTask={setSelectedTaskIndex}
+          selectTask={selectTask}
           openAddTaskModal={() => setIsAddTaskModalOpen(true)}
-          openEditTaskModal={(taskIndex) => {
+          openEditTaskModal={openEditTaskModal}
+          deleteTask={deleteTask}
+          openAddSubtaskModal={openAddSubtaskModal}
+          openEditSubtaskModal={openEditSubtaskModal}
+          deleteSubtask={deleteSubtask}
+          selectSubtask={(taskIndex: number, subtaskIndexes: number[]) => {
             setCurrentTaskIndex(taskIndex);
-            setIsEditTaskModalOpen(true);
-          }}
-          deleteTask={handleTaskDelete}
-          openAddSubtaskModal={(taskIndex) => {
+            setCurrentSubtaskIndexes(subtaskIndexes);
             setSelectedTaskIndex(taskIndex);
-            setIsAddSubtaskModalOpen(true);
           }}
-          openEditSubtaskModal={(taskIndex, subtaskIndex) => {
-            setCurrentTaskIndex(taskIndex);
-            setCurrentSubtaskIndex(subtaskIndex);
-            setIsEditSubtaskModalOpen(true);
-          }}
-          deleteSubtask={handleSubtaskDelete}
-          selectSubtask={handleSubtaskSelect}
         />
       </div>
-      <SubtaskDetails selectedSubtask={selectedSubtask} />
+      <div className="w-1/2 p-4">
+        {selectedTaskIndex !== null && (
+          <SubtaskDetails
+            task={tasks[selectedTaskIndex]}
+            selectSubtask={(subtaskIndexes: number[]) => setCurrentSubtaskIndexes(subtaskIndexes)}
+          />
+        )}
+      </div>
       <AddTaskModal
         isOpen={isAddTaskModalOpen}
         onClose={() => setIsAddTaskModalOpen(false)}
-        onAddTask={(newTask) => {
-          const updatedTasks = [...tasks, newTask];
-          setTasks(updatedTasks);
-          setExpandedTasks([...expandedTasks, false]);
-          setCompletedSubtasks({ ...completedSubtasks, [updatedTasks.length - 1]: Array(newTask.subtasks.length).fill(false) });
-          setIsAddTaskModalOpen(false);
-          saveToLocalStorage(updatedTasks);
-        }}
+        onAddTask={handleAddTask}
       />
       <AddSubtaskModal
         isOpen={isAddSubtaskModalOpen}
         onClose={() => setIsAddSubtaskModalOpen(false)}
-        onAddSubtask={(newSubtask) => {
-          if (selectedTaskIndex !== null) {
-            const updatedTasks = [...tasks];
-            updatedTasks[selectedTaskIndex].subtasks.push(newSubtask);
-            setTasks(updatedTasks);
-            setCompletedSubtasks({
-              ...completedSubtasks,
-              [selectedTaskIndex]: [...completedSubtasks[selectedTaskIndex], false]
-            });
-            setIsAddSubtaskModalOpen(false);
-            saveToLocalStorage(updatedTasks);
-          }
-        }}
+        onAddSubtask={handleAddSubtask}
       />
-      <EditTaskModal
-        isOpen={isEditTaskModalOpen}
-        onClose={() => setIsEditTaskModalOpen(false)}
-        task={currentTaskIndex !== null ? tasks[currentTaskIndex] : null}
-        onEditTask={(updatedTask) => {
-          if (currentTaskIndex !== null) {
-            handleTaskEdit(currentTaskIndex, updatedTask);
-            setIsEditTaskModalOpen(false);
-          }
-        }}
-      />
-
       <EditTaskModal
       isOpen={isEditTaskModalOpen}
       onClose={() => setIsEditTaskModalOpen(false)}
-      task={currentTaskIndex !== null ? tasks[currentTaskIndex] : null}
-      onEditTask={(updatedTask) => {
-        if (currentTaskIndex !== null) {
-          handleTaskEdit(currentTaskIndex, updatedTask);
-          setIsEditTaskModalOpen(false);
-        }
-      }}
+      onEditTask={handleEditTask}
+      task={currentTaskIndex !== null ? tasks[currentTaskIndex] : undefined}
     />
-
     <EditSubtaskModal
-     isOpen={isEditSubtaskModalOpen}
-     onClose={() => setIsEditSubtaskModalOpen(false)}
-     subtask={currentTaskIndex !== null && currentSubtaskIndex !== null ? tasks[currentTaskIndex].subtasks[currentSubtaskIndex] : null}
-     onEditSubtask={(updatedSubtask) => { // Changed prop name
-       if (currentTaskIndex !== null && currentSubtaskIndex !== null) {
-         handleSubtaskEdit(currentSubtaskIndex, updatedSubtask);
-         setIsEditSubtaskModalOpen(false);
-       }
-     }}
-   />
-   
-
-      <AddSubtaskModal
-        isOpen={isAddSubtaskModalOpen}
-        onClose={() => setIsAddSubtaskModalOpen(false)}
-        onAddSubtask={(newSubtask) => {
-          if (selectedTaskIndex !== null) {
-            const updatedTasks = [...tasks];
-            updatedTasks[selectedTaskIndex].subtasks.push(newSubtask);
-            setTasks(updatedTasks);
-            setCompletedSubtasks({
-              ...completedSubtasks,
-              [selectedTaskIndex]: [...completedSubtasks[selectedTaskIndex], false]
-            });
-            setIsAddSubtaskModalOpen(false);
-            saveToLocalStorage(updatedTasks);
-          }
-        }}
-      />
-    </div>
-  );
+      isOpen={isEditSubtaskModalOpen}
+      onClose={() => setIsEditSubtaskModalOpen(false)}
+      onEditSubtask={handleEditSubtask}
+      subtask={
+        currentTaskIndex !== null
+          ? currentSubtaskIndexes.reduce(
+              (subtask, index) => subtask.subtasks[index],
+              tasks[currentTaskIndex]
+            )
+          : undefined
+      }
+    />
+  </div>
+);
 };
 
 export default App;

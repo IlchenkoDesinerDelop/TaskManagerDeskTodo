@@ -1,26 +1,25 @@
 import React, { useState } from 'react';
 
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  subtasks: Subtask[];
+}
+
 interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddTask: (newTask: Task) => void;
 }
 
-const AddTaskModal: React.FC<AddTaskModalProps> = ({
-  isOpen,
-  onClose,
-  onAddTask
-}) => {
+const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onAddTask }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    onAddTask({
-      title,
-      description,
-      subtasks: [],
-    });
+    onAddTask({ id: Date.now().toString(), title, description, subtasks: [] });
     onClose();
   };
 
